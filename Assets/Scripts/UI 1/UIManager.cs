@@ -5,7 +5,7 @@ public class UIManager : MonoBehaviour
 {
     public GameObject CraftUI;
     public GameObject PotionCraftUI;
-    public GameObject DialogueUI;
+    //public GameObject DialogueUI;
     public GameObject ShopUI;
 
     /// <summary>
@@ -18,7 +18,9 @@ public class UIManager : MonoBehaviour
             return CraftUIOpenFlag
                 || PotionCraftUIOpenFlag
                 || DialogueOpenFlag
-                || ShopUIOpenFlag;
+                || ShopUIOpenFlag
+                || GManager.Instance.IsInventoryUI.isOpen;
+
         }
     }
     public bool CraftUIOpenFlag = false;
@@ -56,7 +58,7 @@ public class UIManager : MonoBehaviour
     {
         ShopUIOpenFlag = true;
         ShopUI.SetActive(true);
-        GManager.Instance.IsPotionCraftUI.InitPotionUI();
+        GManager.Instance.IsShopUI.InitShopUI();
 
     }
     private void CloseUI()
@@ -72,6 +74,11 @@ public class UIManager : MonoBehaviour
             {
                 PotionCraftUIOpenFlag = false;
                 PotionCraftUI.SetActive(false);
+            }
+            if (ShopUIOpenFlag)
+            {
+                ShopUIOpenFlag = false;
+                ShopUI.SetActive(false);
             }
             // 다른 UI들도 추후 여기에 추가
             // if (DialogueOpenFlag) { ... }

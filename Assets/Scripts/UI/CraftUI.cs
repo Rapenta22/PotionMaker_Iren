@@ -207,13 +207,13 @@ public class CraftUI : MonoBehaviour
     private void HandleSlotMoveInput()
     {
         // 1. 먼저 GetKeyDown 처리 (처음 누른 순간만 반응)
-        if (Input.GetKeyDown(KeyCode.W))
+        if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             MoveSlot(-1);
             holdTimer = holdDelay;
             return; //  중복 입력 방지
         }
-        else if (Input.GetKeyDown(KeyCode.S))
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             MoveSlot(1);
             holdTimer = holdDelay;
@@ -221,7 +221,7 @@ public class CraftUI : MonoBehaviour
         }
 
         // 2. 누르고 있는 상태 처리 (Hold)
-        if (Input.GetKey(KeyCode.W))
+        if (Input.GetKey(KeyCode.UpArrow))
         {
             holdTimer -= Time.deltaTime;
             if (holdTimer <= 0f)
@@ -230,7 +230,7 @@ public class CraftUI : MonoBehaviour
                 holdTimer = holdDelay;
             }
         }
-        else if (Input.GetKey(KeyCode.S))
+        else if (Input.GetKey(KeyCode.DownArrow))
         {
             holdTimer -= Time.deltaTime;
             if (holdTimer <= 0f)

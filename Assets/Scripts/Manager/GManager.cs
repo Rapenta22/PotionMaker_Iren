@@ -19,6 +19,9 @@ public class GManager : MonoBehaviour
     [Header("포션 제작 관련")]
     [SerializeField] private PotionCraftUI m_potionCraftUI;
     public PotionCraftUI IsPotionCraftUI { get { return m_potionCraftUI; } }
+    [Header("상점 관련")]
+    [SerializeField] private ShopUI m_shopUI;
+    public ShopUI IsShopUI { get { return m_shopUI; } }
     [Header("사운드 관련")]
     public MapBGMController mapBGMController;
     [SerializeField] private SoundManager m_soundManager;
@@ -47,9 +50,6 @@ public class GManager : MonoBehaviour
     /// </summary>
     [SerializeField] UIManager m_UIManager = null;
     public UIManager IsUIManager { get { return m_UIManager; } }
-    
-
-
     /// <summary>
     /// 제작 UI
     /// </summary>
@@ -66,6 +66,9 @@ public class GManager : MonoBehaviour
     /// 맵 전환시 false로
     /// </summary>
     public bool IsSettingFlag { get; set; } = false;
+
+    public bool m_uiPrev = false;
+
     /// <summary>
     /// 싱글톤 인스턴스
     /// </summary>
@@ -83,6 +86,20 @@ public class GManager : MonoBehaviour
         {
             Destroy(gameObject);
             return;
+        }
+    }
+
+    void Update()
+    {
+        if (IsUIManager == null || IsUserController == null) return;
+
+        bool isUI = IsUIManager.UIOpenFlag;
+
+        if (isUI != m_uiPrev)
+        {
+            IsUserController.SetMoveFlag(!isUI);
+            Debug.Log($"[GManager] UI 상태 변경: 이동 {(isUI ? "차단" : "허용")}");
+            m_uiPrev = isUI;
         }
     }
     /// <summary>
@@ -115,26 +132,19 @@ public class GManager : MonoBehaviour
             Setting(m_character);
         }
         InitFirstMapBounds();
-        Debug.Log($"[GManager] mapBGMController 연결 상태: {(mapBGMController != null ? "정상" : "null")}");
 
         if (currentMapGroup != null && mapBGMController != null)
         {
             mapBGMController.PlayBGMForMap(currentMapGroup);
-        }
-        else
-        {
-            Debug.LogWarning("[GManager] 초기 맵이나 mapBGMController가 설정되지 않음");
         }
     }
     public void SetInventoryUI(InventoryUI ui)
     {
         m_inventoryUI = ui; 
     }
-
     public void SetTPFlag(bool isOn)
     {
         TPFlag = isOn;
-        Debug.Log($"[TPFlag] 상태 변경됨 → {(isOn ? "ON (이동 불가)" : "OFF (이동 가능)")}");
     }
     public void StartTPAfterTeleport()
     {
@@ -150,27 +160,19 @@ public class GManager : MonoBehaviour
 
     private IEnumerator TPAfterTeleportCoroutine()
     {
-        Debug.Log("[GManager] 페이드 인 시작");
-
-        // 바로 FadeIn 시작
         yield return StartCoroutine(m_fadeInOut.FadeIn());
-
-        Debug.Log("[GManager] 페이드 인 완료, TPFlag OFF");
-
         SetTPFlag(false);
     }
     private void InitFirstMapBounds()
     {
         if (currentMapGroup == null)
         {
-            Debug.LogWarning("[GManager] 시작할 때 currentMapGroup이 연결되어 있지 않습니다.");
             return;
         }
 
         BoxCollider2D collider = currentMapGroup.GetComponent<BoxCollider2D>();
         if (collider == null)
         {
-            Debug.LogWarning("[GManager] 시작할 때 currentMapGroup에 BoxCollider2D가 없습니다.");
             return;
         }
 
@@ -181,11 +183,6 @@ public class GManager : MonoBehaviour
         if (IsCameraBase != null)
         {
             IsCameraBase.SetCameraBounds(min, max);
-            Debug.Log($"[GManager] 게임 시작 시 카메라 제한 자동 설정: Min {min} / Max {max}");
-        }
-        else
-        {
-            Debug.LogError("[GManager] CameraBase 연결이 되어 있지 않습니다.");
         }
     }
 }
