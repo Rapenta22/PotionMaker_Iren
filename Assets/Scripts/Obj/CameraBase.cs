@@ -17,9 +17,14 @@ public class CameraBase : MonoBehaviour
 
     void LateUpdate()
     {
+        if (target == null && GManager.Instance.IsUserTrans != null)
+        {
+            target = GManager.Instance.IsUserTrans;
+            Debug.Log("[CameraBase] target을 재설정: " + target.name);
+        }
+
         if (!GManager.Instance.IsSettingFlag) return;
         if (target == null || cam == null) return;
-
         Vector3 targetPos = target.position;
 
         float camHeight = cam.orthographicSize;

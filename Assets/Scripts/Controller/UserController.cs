@@ -4,29 +4,36 @@ using UnityEngine;
 
 public class UserController : ParentController
 {
-    [SerializeField] private float m_moveSpeed = 5f; // 이동 속도
-    private Vector2 m_input = Vector2.zero;
-    private Rigidbody2D m_rb;
-    private int wallLayer; // 벽 레이어 저장
-    private float lastMoveX = 1f; // 처음에는 왼쪽 보는 걸로 가정
-    [SerializeField] private Animator animator;
+    [SerializeField] float m_moveSpeed = 5f; // 이동 속도
+    public Vector2 m_input = Vector2.zero;
+    public Rigidbody2D m_rb;
+    public float lastMoveX = 1f; // 처음에는 왼쪽 보는 걸로 가정
+
+    [SerializeField] Animator animator;
+
+    private bool wasInteractKeyPressedLastFrame = false;
+    private float m_interactCooldown = 0f;
+    private const float INTERACT_DELAY = 0.2f;
+
+
     /// <summary>
     /// 인터렉터블인터페이스
     /// </summary>
-    private IInteractableInterface currentTarget = null;
+    public IInteractableInterface currentTarget = null;
 
-    private List<Collider2D> interactablesInRangeList = new List<Collider2D>();
+    public List<Collider2D> interactablesInRangeList = new List<Collider2D>();
     /// <summary>
     /// 이동 플래그 
     /// </summary>
     public bool m_moveFlag = false;
     public bool IsMoveLock { get; private set; } = false;
 
+    public bool isInteracting = false;
+
 
     private void Start()
     {
         m_rb = GetComponent<Rigidbody2D>();
-        wallLayer = LayerMask.NameToLayer("Wall"); // "Wall" 레이어 가져오기
         // Rigidbody2D 설정
         m_rb.gravityScale = 0;
         m_rb.freezeRotation = true;
@@ -38,7 +45,10 @@ public class UserController : ParentController
     void Update()
     {
         if (GManager.Instance != null && GManager.Instance.TPFlag) return;
-        Interact();
+        if (m_interactCooldown > 0f)
+            m_interactCooldown -= Time.deltaTime;
+
+        InputBuffer();
         Move();
     }
     private void FixedUpdate()
@@ -60,12 +70,23 @@ public class UserController : ParentController
             animator.SetBool("isMove", false);
             return;
         }
+        if (GManager.Instance == null)
+        {
+            Debug.LogError("[UserController] GManager.Instance가 null입니다.");
+            return;
+        }
+
+        if (GManager.Instance.IsInventoryUI == null)
+        {
+            Debug.LogError("[UserController] IsInventoryUI가 null입니다.");
+            return;
+        }
 
         if (GManager.Instance.IsInventoryUI.isOpen)
         {
             Debug.Log("[UserController] 인벤토리 UI가 열려 있어 이동 불가.");
-            m_input = Vector2.zero; //  꼭 필요! 입력 강제 정지
-            m_rb.velocity = Vector2.zero; //  리지드바디도 멈추기
+            m_input = Vector2.zero;
+            m_rb.velocity = Vector2.zero;
             animator.SetBool("isMove", false);
             return;
         }
@@ -142,24 +163,24 @@ public class UserController : ParentController
     /// </summary>
     private void Interact()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (isInteracting) return; // 중복 인터렉션 차단
+        isInteracting = true;
+
+        if (interactablesInRangeList.Count == 0)
         {
-            if (interactablesInRangeList.Count == 0)
-            {
-                return;
-            }
+            return;
+        }
 
-            foreach (var col in interactablesInRangeList)
-            {
-                Debug.Log($"[Interact] 대상 확인 중: {col.gameObject.name}");
+        foreach (var col in interactablesInRangeList)
+        {
+            Debug.Log($"[Interact] 대상 확인 중: {col.gameObject.name}");
 
-                var target = col.GetComponent<IInteractableInterface>();
-                if (target != null)
-                {
-                    Debug.Log($"[Interact] 상호작용 시도: {col.gameObject.name}");
-                    target.Interact();
-                    break;
-                }
+            var target = col.GetComponent<IInteractableInterface>();
+            if (target != null)
+            {
+                Debug.Log($"[Interact] 상호작용 시도: {col.gameObject.name}");
+                target.Interact();
+                break;
             }
         }
     }
@@ -172,4 +193,37 @@ public class UserController : ParentController
             animator.SetBool("isMove", false);
         }
     }
+
+    public void InputBuffer()
+    {
+        bool isPressedNow = Input.GetKey(KeyCode.Space);
+
+        //  쿨다운 중이면 입력 무시
+        if (m_interactCooldown > 0f)
+        {
+            wasInteractKeyPressedLastFrame = isPressedNow;
+            return;
+        }
+
+        //  인터렉트 중이면 입력 무시
+        if (isInteracting)
+        {
+            wasInteractKeyPressedLastFrame = isPressedNow;
+            return;
+        }
+
+        //  "떼었다가 다시 눌렀을 때"만 상호작용
+        if (!wasInteractKeyPressedLastFrame && isPressedNow)
+        {
+            Interact();
+        }
+
+        wasInteractKeyPressedLastFrame = isPressedNow;
+    }
+
+    public void StartInteractCooldown()
+    {
+        m_interactCooldown = INTERACT_DELAY;
+    }
+
 }
