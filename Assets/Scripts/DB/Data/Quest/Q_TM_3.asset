@@ -24,6 +24,10 @@ MonoBehaviour:
     m_targetNpcId: 
     m_targetMapId: 
     m_nextQuestID: 
+    m_afterDia: {fileID: -4194535444022604628, guid: 4f761753012195548b1c1c7bacbc2ed7,
+      type: 2}
+    m_preDia: {fileID: -4194535444022604628, guid: 325ff9c8c8f02c04bb8cb743bee6682f,
+      type: 2}
   - m_description: "\uD478\uB978 \uC218\uBD84\uCD08 \uCC44\uC9D1\uD558\uAE30"
     m_stepType: 1
     m_requiredAmount: 1
@@ -31,6 +35,9 @@ MonoBehaviour:
     m_targetNpcId: 
     m_targetMapId: 
     m_nextQuestID: 
+    m_afterDia: {fileID: 0}
+    m_preDia: {fileID: -4194535444022604628, guid: 006728f89c146ae4f81b2ca44e97082c,
+      type: 2}
   - m_description: "\uC791\uC5C5\uC2E4\uB85C \uC774\uB3D9\uD558\uAE30"
     m_stepType: 0
     m_requiredAmount: 0
@@ -38,6 +45,10 @@ MonoBehaviour:
     m_targetNpcId: 
     m_targetMapId: MapMH_Home
     m_nextQuestID: 
+    m_afterDia: {fileID: -4194535444022604628, guid: 1f24ea60523d9a94f80c735f6ef5fd94,
+      type: 2}
+    m_preDia: {fileID: -4194535444022604628, guid: 006728f89c146ae4f81b2ca44e97082c,
+      type: 2}
   - m_description: "\uC57C\uAD11 \uBC84\uC12F \uAC00\uACF5\uD558\uAE30"
     m_stepType: 1
     m_requiredAmount: 1
@@ -45,6 +56,8 @@ MonoBehaviour:
     m_targetNpcId: 
     m_targetMapId: 
     m_nextQuestID: 
+    m_afterDia: {fileID: 0}
+    m_preDia: {fileID: 0}
   - m_description: "\uD3EC\uC158 \uC81C\uC791\uD558\uAE30"
     m_stepType: 2
     m_requiredAmount: 1
@@ -52,6 +65,8 @@ MonoBehaviour:
     m_targetNpcId: 
     m_targetMapId: 
     m_nextQuestID: 
+    m_afterDia: {fileID: 0}
+    m_preDia: {fileID: 0}
   - m_description: "\uD3EC\uC158\uC744 \uB4E4\uACE0 \uC8FC\uC810\uC73C\uB85C \uC774\uB3D9\uD558\uAE30"
     m_stepType: 0
     m_requiredAmount: 0
@@ -59,5 +74,8 @@ MonoBehaviour:
     m_targetNpcId: 
     m_targetMapId: MapM0_Bar
     m_nextQuestID: Q_TM_4
+    m_afterDia: {fileID: 0}
+    m_preDia: {fileID: -4194535444022604628, guid: ba033b7566895dd49ab701ddd358ed31,
+      type: 2}
   m_rewardItems: []
   m_rewardGold: 0

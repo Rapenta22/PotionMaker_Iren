@@ -52,7 +52,7 @@ public class GManager : MonoBehaviour
     /// <summary>
     /// 인벤 매니저
     /// </summary>
-    public InventoryManager IsinvenManager { get { return m_invenManager; } }
+    public InventoryManager IsInvenManager { get { return m_invenManager; } }
     /// <summary>
     /// 인벤토리 매니저
     /// </summary>
@@ -104,6 +104,19 @@ public class GManager : MonoBehaviour
     [SerializeField] SceneLoader m_sceneLoader;
     public SceneLoader IsSceneLoader { get { return m_sceneLoader; } }
 
+    [Header("HUD")]
+    [SerializeField] HUD_UI m_hudUI;
+    public HUD_UI IsHUDUI { get { return m_hudUI; } }
+
+    [Header("HUD")]
+    [SerializeField] ErrorMessage m_errorMessage;
+    public ErrorMessage IsErrorMessage { get { return m_errorMessage; } }
+
+
+    [Header("HUD")]
+    [SerializeField] GetMessage m_getMessageUI;
+    public GetMessage IsGetMessageUI { get { return m_getMessageUI; } }
+    
     /// <summary>
     /// 세팅 플래그
     /// 맵 전환시 false로
@@ -263,6 +276,10 @@ public class GManager : MonoBehaviour
 
         m_inventoryUI = GameObject.Find("Inventory")?.GetComponent<InventoryUI>();
 
+        m_hudUI = FindObjectOfType<HUD_UI>();
+
+        m_getMessageUI = FindAnyObjectByType<GetMessage>();
+
         // 매니저
         m_invenManager = FindObjectOfType<InventoryManager>();
 
@@ -281,6 +298,8 @@ public class GManager : MonoBehaviour
             m_UIManager.ShopUI = GameObject.Find("ShopUI");
             m_UIManager.DialogueUI = GameObject.Find("DialogueUI");
             m_UIManager.BookUI = GameObject.Find("BookUI");
+            m_UIManager.QuestUIOpen = GameObject.Find("QuestUIOpen");
+            m_UIManager.QuestUIClosed = GameObject.Find("QuestUIClosed");
         }
     }
 

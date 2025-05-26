@@ -20,7 +20,6 @@ public class CameraBase : MonoBehaviour
         if (target == null && GManager.Instance.IsUserTrans != null)
         {
             target = GManager.Instance.IsUserTrans;
-            Debug.Log("[CameraBase] target을 재설정: " + target.name);
         }
 
         if (!GManager.Instance.IsSettingFlag) return;

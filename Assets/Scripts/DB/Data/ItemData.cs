@@ -14,6 +14,9 @@ public class ItemData : ScriptableObject
     public int m_maxStack;
     public Sprite m_itemIcon;
     public ItemType ItemType;
+    public int m_buyValue;
+    public int m_sellValue;
+
     [TextArea] public string m_description;
     public bool m_usableItem;
 

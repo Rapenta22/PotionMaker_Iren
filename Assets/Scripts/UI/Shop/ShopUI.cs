@@ -195,7 +195,7 @@ public class ShopUI : MonoBehaviour
     }
     public void UpdateSellUI()
     {
-        var data = GManager.Instance.IsinvenManager.IsInventoryData;
+        var data = GManager.Instance.IsInvenManager.IsInventoryData;
 
         if (data == null || data.slots == null)return;
         for (int i = 0; i < m_sellSlot.Length; i++)

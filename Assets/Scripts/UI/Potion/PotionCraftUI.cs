@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
 public class PotionCraftUI : MonoBehaviour
 {
@@ -57,6 +59,18 @@ public class PotionCraftUI : MonoBehaviour
     [Header("리스트 표시 부모")]
     [SerializeField] Transform PotionListContent;
     [SerializeField] ScrollRect scrollRect;
+
+
+    [Header("연출용")]
+    [SerializeField] GameObject completePanel;   // CompletePanel 오브젝트
+    [SerializeField] Image m_resultPotion;
+    [SerializeField] TMP_Text m_resultPotion_name;
+
+    [SerializeField] GameObject[] toggleObjects; // 비활성/활성 할 4개 오브젝트
+    [SerializeField] VideoClip potionMakeLv1Cutscene;
+
+
+
     public float scrollStepY = 70f;     // 슬롯 하나 높이
 
 
@@ -65,7 +79,7 @@ public class PotionCraftUI : MonoBehaviour
 
     public List<PotionCraftListUI> slotList = new List<PotionCraftListUI>();
     public int selectedIndex = 0;
-    public int GetSelectedIndex()=>selectedIndex;
+    public int GetSelectedIndex() => selectedIndex;
     public enum UIState { List, Craft }
     public UIState currentState = UIState.List;
 
@@ -74,6 +88,7 @@ public class PotionCraftUI : MonoBehaviour
 
     void Start()
     {
+        completePanel.SetActive(false);
         m_bookCraftUI.SetActive(false);
         m_potionCraftUI.SetActive(false);
         InitPotionUI();
@@ -108,8 +123,7 @@ public class PotionCraftUI : MonoBehaviour
             SwitchTab(currentTab);
         }
         HandleSlotMoveInput();
-       
-        // Z키 기능
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (currentState == UIState.List)
@@ -118,9 +132,10 @@ public class PotionCraftUI : MonoBehaviour
             }
             else if (currentState == UIState.Craft)
             {
-                TryCraft(); // 상세 정보에서 제작 시도
+                StartCoroutine(TryCraftCoroutine()); // 코루틴으로 제작 시도
             }
         }
+
         if (!gameObject.activeSelf) return;
 
         if (Input.GetKeyDown(KeyCode.Z) && currentState == UIState.Craft)
@@ -144,6 +159,7 @@ public class PotionCraftUI : MonoBehaviour
         selectedIndex = 0;
         HighlightSlot();
         UpdateTabVisual();
+        SoundManager.Instance.PlaySystemSound(3);
 
 
         // 탭 UI 표시 처리도 있으면 여기에 추가
@@ -250,16 +266,30 @@ public class PotionCraftUI : MonoBehaviour
 
         var data = selected.GetPotionData();
         if (data == null) return;
-        // BookCraft UI 표시
+
         m_bookCraftUI.SetActive(true);
 
-        // 슬롯 세팅
         m_Input1Slot.Set(data.IsInputI1, data.IsIAmount1);
         m_Input2Slot.Set(data.IsInputI2, data.IsIAmount2);
         m_OutputSlot.Set(data.IsOutputItem, data.IsOAmount);
 
-        // 묘사(좌측) 세팅
-        m_PIllustInCraft.sprite=data.IsPotionIllust;
+        // 재료 보유 여부에 따른 딤드 처리
+        bool hasInput1 = m_exchangeManager.InvenManager.IsInventoryData.HasItem(data.IsInputI1, data.IsIAmount1);
+        bool hasInput2 = m_exchangeManager.InvenManager.IsInventoryData.HasItem(data.IsInputI2, data.IsIAmount2);
+
+        Color dimmedColor = new Color32(140, 140, 140, 255);
+        Color normalColor = Color.white;
+
+        m_Input1Slot.SetIconColor(hasInput1 ? normalColor : dimmedColor);
+        m_Input2Slot.SetIconColor(hasInput2 ? normalColor : dimmedColor);
+
+        // 둘 중 하나라도 딤드라면 출력 슬롯도 딤드 처리
+        bool shouldDimOutput = !hasInput1 || !hasInput2;
+        m_OutputSlot.SetIconColor(shouldDimOutput ? dimmedColor : normalColor);
+
+
+        // 상세 묘사 세팅은 기존대로
+        m_PIllustInCraft.sprite = data.IsPotionIllust;
         m_potionText.text = data.IsPotionDS;
         m_pNameInCraft.text = data.IsName;
         m_Input1InCraft.sprite = data.IsInputI1.m_itemIcon;
@@ -270,7 +300,6 @@ public class PotionCraftUI : MonoBehaviour
         m_Input2SubCate.text = GetSubCategory(data.IsInputI2);
 
         Debug.Log($"[TrySelected] 선택된 인덱스: {selectedIndex}");
-
 
         currentState = UIState.Craft;
         Debug.Log($"[PotionCraftUI] 상세 모드 진입: {data.IsName}");
@@ -283,20 +312,20 @@ public class PotionCraftUI : MonoBehaviour
             return null;
         return slotList[selectedIndex];
     }
-    void TryCraft()
+    private IEnumerator TryCraftCoroutine()
     {
         if (selectedIndex < 0 || selectedIndex >= slotList.Count)
         {
-            Debug.LogWarning("[TryCraft] 잘못된 인덱스 접근: selectedIndex = " + selectedIndex);
-            return;
+            Debug.LogWarning("[TryCraft] 잘못된 인덱스 접근");
+            yield break;
         }
 
-        PotionCraftListUI selected = slotList[selectedIndex];
-        PotionCraftData data = selected.GetPotionData();
+        var selected = slotList[selectedIndex];
+        var data = selected.GetPotionData();
         if (data == null)
         {
             Debug.LogWarning("[TryCraft] 선택된 포션 데이터가 null입니다.");
-            return;
+            yield break;
         }
 
         Debug.Log($"[TryCraft] 포션 제작 시도: {data.IsName}");
@@ -304,34 +333,36 @@ public class PotionCraftUI : MonoBehaviour
         // 1. 등급 확인
         if (m_exchangeManager.m_userData.IsGrade < data.IsGradeType)
         {
-            Debug.LogWarning($"[TryCraft] 제작 실패: 등급 부족 (현재: {m_exchangeManager.m_userData.IsGrade}, 필요: {data.IsGradeType})");
-            return;
+            GManager.Instance.IsErrorMessage.ShowErrorMessage($"제작하기 위해선 {data.IsGradeType} 등급을 달성해야 합니다.", this.transform.parent);
+            yield break;
         }
 
         // 2. 재료1 체크
         if (!m_exchangeManager.InvenManager.IsInventoryData.HasItem(data.IsInputI1, data.IsIAmount1))
         {
-            Debug.LogWarning($"[TryCraft] 제작 실패: 재료1 부족 - {data.IsInputI1.m_itemName} 필요: {data.IsIAmount1}");
-            return;
+            GManager.Instance.IsErrorMessage.ShowErrorMessage($"제작 실패: 재료가 부족합니다.", this.transform.parent);
+            yield break;
         }
 
         // 3. 재료2 체크
         if (!m_exchangeManager.InvenManager.IsInventoryData.HasItem(data.IsInputI2, data.IsIAmount2))
         {
-            Debug.LogWarning($"[TryCraft] 제작 실패: 재료2 부족 - {data.IsInputI2.m_itemName} 필요: {data.IsIAmount2}");
-            return;
+            GManager.Instance.IsErrorMessage.ShowErrorMessage($"제작 실패: 재료가 부족합니다.", this.transform.parent);
+            yield break;
         }
 
         // 4. 인벤토리 공간 체크
         if (!m_exchangeManager.InvenManager.IsInventoryData.HasSpaceForItem(data.IsOutputItem, data.IsOAmount))
         {
-            Debug.LogWarning($"[TryCraft] 제작 실패: 인벤토리 공간 부족 (아이템: {data.IsOutputItem.m_itemName}, 수량: {data.IsOAmount})");
-            return;
+            GManager.Instance.IsErrorMessage.ShowErrorMessage($"제작 실패: 인벤토리 공간이 부족합니다.", this.transform.parent);
+            yield break;
         }
 
         // 실제 제작
         m_exchangeManager.PotionCraft(data);
         Debug.Log($"[TryCraft] 제작 성공! {data.IsOutputItem.m_itemName} × {data.IsOAmount}");
+        UpdateInputSlotDim(data);
+        PlayPotionCompleteSequence();
     }
 
 
@@ -441,4 +472,63 @@ public class PotionCraftUI : MonoBehaviour
                 return "기타";
         }
     }
+    public void PlayPotionCompleteSequence()
+    {
+        // 1. toggleObjects 4개만 비활성화
+        foreach (var obj in toggleObjects)
+            obj.SetActive(false);
+
+        // 2. 영상 재생 코루틴 실행 (이 스크립트 붙은 오브젝트는 활성화 상태 유지)
+        StartCoroutine(PlayVideoAndShowCompletePanel());
+    }
+
+    private IEnumerator PlayVideoAndShowCompletePanel()
+    {
+        // 영상 클립 가져오기
+        var clip = GManager.Instance.IsVideoManager.GetVideoClipByName("PotionMake_Lv1_CutScene");
+        if (clip != null)
+        {
+            // 영상 재생
+            yield return StartCoroutine(GManager.Instance.IsVideoManager.PlayVideoRoutine(clip));
+        }
+        else
+        {
+            Debug.LogWarning("[PlayVideoAndShowCompletePanel] 영상 클립을 찾을 수 없습니다.");
+        }
+
+        // 3. 영상 종료 후 완료 패널 활성화
+        completePanel.SetActive(true);
+
+        // 4. 스페이스 키 입력 대기
+        yield return new WaitForSeconds(2f);
+
+        // 5. 완료 패널 비활성화 및 UI 복원
+        completePanel.SetActive(false);
+
+        m_potionCraftUI.SetActive(true);
+        // 상세 UI는 필요시 활성화
+        m_bookCraftUI.SetActive(false);
+
+        foreach (var obj in toggleObjects)
+            obj.SetActive(true);
+
+        // 6. 상태 초기화
+        currentState = UIState.List;
+        HighlightSlot();
+    }
+    private void UpdateInputSlotDim(PotionCraftData data)
+    {
+        bool hasInput1 = m_exchangeManager.InvenManager.IsInventoryData.HasItem(data.IsInputI1, data.IsIAmount1);
+        bool hasInput2 = m_exchangeManager.InvenManager.IsInventoryData.HasItem(data.IsInputI2, data.IsIAmount2);
+
+        Color dimmedColor = new Color32(140, 140, 140, 255);
+        Color normalColor = Color.white;
+
+        m_Input1Slot.SetIconColor(hasInput1 ? normalColor : dimmedColor);
+        m_Input2Slot.SetIconColor(hasInput2 ? normalColor : dimmedColor);
+
+        bool shouldDimOutput = !hasInput1 || !hasInput2;
+        m_OutputSlot.SetIconColor(shouldDimOutput ? dimmedColor : normalColor);
+    }
+
 }

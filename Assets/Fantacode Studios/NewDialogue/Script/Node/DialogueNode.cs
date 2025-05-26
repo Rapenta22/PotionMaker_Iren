@@ -20,7 +20,7 @@ public class DialogueNode : ScriptableObject
 {
     [Header("노드 이름")]
     public string m_nodeName;
-
+    public string m_nodeID;
     [Header("노드 타입")]
     public NodeType m_nodeType;
     public Vector2 m_position;
@@ -92,8 +92,6 @@ public class DialogueNode : ScriptableObject
                 break;
 
             case NodeType.End:
-                Debug.Log($"[DialogueNode] End 노드 실행됨. m_talkNpcID = {m_talkNpcID}");
-
                 if (!string.IsNullOrEmpty(m_talkNpcID))
                 {
                     var qm = GManager.Instance.IsQuestManager;

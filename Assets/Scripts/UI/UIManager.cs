@@ -8,6 +8,21 @@ public class UIManager : MonoBehaviour
     public GameObject ShopUI;
     public GameObject DialogueUI;
     public GameObject BookUI;
+    public GameObject QuestUIOpen;
+    public GameObject QuestUIClosed;
+
+    void Awake()
+    {
+        if (QuestUIOpen == null)
+        {
+            var parent = GameObject.Find("QuestHUD");
+            if (parent != null)
+            {
+                QuestUIOpen = parent.transform.Find("QuestUIOpen")?.gameObject;
+                QuestUIClosed = parent.transform.Find("QuestUIClosed")?.gameObject;
+            }
+        }
+    }
 
     /// <summary>
     /// 플래그 세팅
@@ -30,6 +45,7 @@ public class UIManager : MonoBehaviour
     public bool DialogueOpenFlag = false;
     public bool ShopUIOpenFlag = false;
     public bool BookUIOpenFlag = false;
+    public bool QuestUIOpenFlag = false;
     /*void Awake()
     {
         if (CraftUI == null) CraftUI = GameObject.Find("CraftUI");
@@ -42,7 +58,12 @@ public class UIManager : MonoBehaviour
     void Update()
     {
         HandleBookUIOpen();
-        CloseUI();
+        HandleQuestUIOpen();
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            CloseUI();
+        }
     }
     public void OpenCraftUI()
     {
@@ -95,18 +116,44 @@ public class UIManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.F))
         {
-            // BookUI가 현재 열려있으면 무시, 아니면 열기
+            // BookUI가 현재 열려있으면 닫기, 아니면 열기
             if (!BookUIOpenFlag)
             {
                 OpenBookUI();
             }
             else
             {
+                BookUIOpenFlag=false;
+                BookUI.SetActive(false);
                 return;
             }
         }
     }
 
+
+    public void OpenQuestUI()
+    {
+        QuestUIOpenFlag = true;
+        QuestUIOpen.SetActive(true);
+        QuestUIClosed.SetActive(false);
+    }
+    public void HandleQuestUIOpen()
+    {
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            if ((!QuestUIOpenFlag))
+            {
+                OpenQuestUI();
+            }
+            else
+            {
+                QuestUIOpenFlag = false;
+                QuestUIOpen.SetActive(false);
+                QuestUIClosed.SetActive(true);
+                return;
+            }
+        }
+    }
     public void CloseUI()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -115,6 +162,13 @@ public class UIManager : MonoBehaviour
             {
                 CraftUIOpenFlag = false;
                 CraftUI.SetActive(false);
+
+                // 제작 코루틴 및 사운드 중지
+                var craftUIComp = CraftUI.GetComponent<CraftUI>();
+                if (craftUIComp != null)
+                {
+                    craftUIComp.StopCraftCoroutine();
+                }
             }
             if (PotionCraftUIOpenFlag)
             {
@@ -131,6 +185,8 @@ public class UIManager : MonoBehaviour
             {
                 DialogueOpenFlag = false;
                 DialogueUI.SetActive(false);
+                GManager.Instance.IsDialogueManager.EndDialogue();
+
             }
             if (BookUIOpenFlag)
             {

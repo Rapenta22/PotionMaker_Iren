@@ -21,6 +21,11 @@ public class QuestStep
     [Header("다음 퀘스트")]
     public string m_nextQuestID;
 
+    [Header("대화 관련")]
+    public DialogueNode m_afterDia;
+    public DialogueNode m_preDia;
+
+
 }
 
 public enum QuestStepType

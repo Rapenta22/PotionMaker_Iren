@@ -15,15 +15,18 @@ public class InventoryManager : MonoBehaviour
             InventoryData = new InventoryData(inventorySize);
         }
     }
-
     public void AddItem(ItemData item, int amount = 1)
     {
         InventoryData.AddItem(item, amount);
         GManager.Instance.IsInventoryUI.UpdateUI();
 
-        // 아이템 추가 시 퀘스트 자동 조건 확인
+        // 획득 메시지 UI 표시
+        GManager.Instance.IsGetMessageUI.AddItemMessage(item.m_itemName, amount);
+
+        SoundManager.Instance.PlaySystemSound(7);
         GManager.Instance.IsQuestManager.TryCompleteStepAll();
     }
+
 
 
     public void RemoveItem(ItemData item, int amount = 1)
@@ -62,6 +65,13 @@ public class InventoryManager : MonoBehaviour
         if (target == null) return false;
 
         return InventoryData.HasItem(target, 1); // 최소 1개 이상 보유 여부
+    }
+    public int GetItemCount(ItemData item)
+    {
+        if (InventoryData == null || item == null)
+            return 0;
+
+        return InventoryData.GetItemCount(item);
     }
 
 }

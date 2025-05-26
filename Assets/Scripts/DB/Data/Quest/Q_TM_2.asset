@@ -24,5 +24,6 @@ MonoBehaviour:
     m_targetNpcId: Max
     m_targetMapId: 
     m_nextQuestID: Q_TM_3
+    m_dialogueGraph: {fileID: 0}
   m_rewardItems: []
   m_rewardGold: 0

@@ -8,7 +8,6 @@ using UnityEngine.Video;
 public class LoadingManager : MonoBehaviour
 {
     [SerializeField] Slider m_loadingBar;
-    private bool videoStarted = false; // 여기 추가!
     private bool m_isLoading = false;
 
     public void StartLoading(string targetScene, bool playIntro)
